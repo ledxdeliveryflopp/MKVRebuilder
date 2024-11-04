@@ -1,0 +1,4 @@
+eac3to v3.34
+command line: I:\Python_Projects\MKVAudioCut\static\eac3\eac3to.exe F:/test/temp/17042143/None.dts F:/test/temp/17042143/None.ac3 -640 -down6
+------------------------------------------------------------------------------
+Source file "F:/test/temp/17042143/None.dts" not found.  <ERROR>

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "mkvaudiocut"
+version = "0.1.0"
+description = "приложение для удаления аудиодорожек из mkv"
+authors = ["LedxDeliveryFlopp"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+loguru = "^0.7.2"
+nuitka = "^2.4.11"
+pyside6 = "^6.8.0.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
