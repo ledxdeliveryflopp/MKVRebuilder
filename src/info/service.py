@@ -33,7 +33,7 @@ class MKVMergeService:
                 try:
                     audio_name = i['properties']['track_name']
                     audio_info = {"id": f"{audio_id}", "format": f"{audio_codec}",
-                                  "name": f"t{audio_name}", "language": f"{language}"}
+                                  "name": f"{audio_name}", "language": f"{language}"}
                     info.append(audio_info)
                 except KeyError:
                     audio_info = {"id": f"id: {audio_id}", "format": f"{audio_codec}",
