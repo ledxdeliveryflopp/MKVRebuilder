@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mkvaudiocut"
+name = "MKVRebuilder"
 version = "0.1.0"
 description = "приложение для удаления аудиодорожек из mkv"
 authors = ["LedxDeliveryFlopp"]
