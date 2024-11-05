@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 from functools import partial
 from time import time
@@ -106,10 +105,10 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_track.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.sound.setText(f"extract sound: {line}"))
+            self.thread_manager.start(self.ui.sound.setText(self.tr(f"extract sound: {line}")))
         t2 = time()
         elapsed = t2 - t1
-        self.ui.sound.setText(f'Progress: 100, time is {elapsed} seconds.')
+        self.ui.sound.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
         if subtitle_temp_path_id:
             self.thread_manager.start(partial(self.extract_sub, subtitle_temp_path_id, temp_path))
         elif not self.bitrate:
@@ -136,10 +135,10 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_sub.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.subtitle.setText(f"extract subtitle: {line}"))
+            self.thread_manager.start(self.ui.subtitle.setText(self.tr(f"extract subtitle: {line}")))
         t2 = time()
         elapsed = t2 - t1
-        self.ui.subtitle.setText(f'Progress: 100, time is {elapsed} seconds.')
+        self.ui.subtitle.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
         if not self.bitrate:
             sound_path = temp_path.get("sound")
             ac3_path = f"{sound_path}{self.track_id}.ac3"
@@ -161,12 +160,12 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         ac3_path_fixed = os.path.abspath(ac3_path)
         self.ac3_path = ac3_path_fixed
         logger.info(f"ac3 path - {self.ac3_path}")
-        self.ui.ac3.setText(f"converting dts to ac3")
+        self.ui.ac3.setText(self.tr("converting dts to ac3"))
         subprocess.run([f"{self.ac3_converter}", dts_path, self.ac3_path, f"-{self.bitrate}", f"-down6"],
                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         t2 = time()
         elapsed = t2 - t1
-        self.ui.ac3.setText(f'Progress: 100, time is {elapsed} seconds.')
+        self.ui.ac3.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
         self.thread_manager.start(self.build_new_mkv)
 
     @logger.catch
@@ -180,10 +179,10 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             logger.info(f"{self.build_new_mkv.__name__} with subs: {command.stdout.readline()}")
             for line in command.stdout:
-                self.ui.mkv.setText(f"rebuild mkv: {line}")
+                self.ui.mkv.setText(self.tr(f"rebuild mkv: {line}"))
             t2 = time()
             elapsed = t2 - t1
-            self.ui.mkv.setText(f'dts to mkv: Progress: 100, time is {elapsed} seconds.')
+            self.ui.mkv.setText(self.tr(f'dts to mkv: Progress: 100, time is {elapsed} seconds.'))
             self.main_window.setEnabled(True)
             # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
         elif not self.subtitle_data:
@@ -191,9 +190,9 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             logger.info(f"{self.build_new_mkv.__name__} no subs: {command.stdout.readline()}")
             for line in command.stdout:
-                self.ui.mkv.setText(f"rebuild mkv without subs: {line}")
+                self.ui.mkv.setText(self.tr(f"rebuild mkv without subs: {line}"))
             t2 = time()
             elapsed = t2 - t1
-            self.ui.mkv.setText(f'Progress: 100, time is {elapsed} seconds.')
+            self.ui.mkv.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
             self.main_window.setEnabled(True)
             # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
