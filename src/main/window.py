@@ -1,5 +1,4 @@
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QRadialGradient, QColor
 from PySide6.QtWidgets import QAbstractItemView
 from loguru import logger
@@ -105,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 except KeyError as key_exc:
                     query = f"id: {track_id}\n format: {codec}\n language: {language}"
                     item = QtGui.QStandardItem(query)
-                    data = {"id": track_id, "lang": language}
+                    data = {"id": track_id, "codec": codec, "lang": language}
                     item.setData(data)
                     self.audio_model.appendRow(item)
         except Exception as exc:
@@ -186,6 +185,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gradient.setColorAt(0, QColor.fromRgbF(0, 1, 0, 1))
         gradient.setColorAt(1, QColor.fromRgbF(0, 0, 0, 0))
         brush = QBrush(gradient)
+        self.cansel_selected_brush(model)
         model.setBackground(brush)
 
     @logger.catch
@@ -201,9 +201,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """Установка id звуковой дорожки"""
         track = self.ui.audio_list.model().itemFromIndex(index)
         data = track.data()
-        self.track_data = track.data()
-        # if data == self.track_data:
-        #     self.track_data = None
+        logger.info(f"{self.track_data}")
+        if data != self.track_data:
+            self.track_data = track.data()
+            logger.info(f"fill: {self.track_data}")
+            self.set_selected_brush(track)
+        elif data == self.track_data:
+            self.track_data = None
+            self.cansel_selected_brush(track)
         # if data not in self.track_list:
         #     self.track_list.append(data)
         #     self.set_selected_brush(track)

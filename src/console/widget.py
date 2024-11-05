@@ -70,8 +70,11 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
     def set_data(self) -> None:
         """Установка необходимой информации о звуковой дорожке и субтитрах"""
         self.track_id = self.track_data.get("id")
-        self.track_name = self.track_data.get("name")
         self.track_lang = self.track_data.get("lang")
+        try:
+            self.track_name = self.track_data.get("name")
+        except KeyError as track_name_none:
+            self.track_name = "Auto fill name"
         if self.subtitle_data:
             logger.info(f"set sub data")
             self.subtitle_id = self.subtitle_data.get("id")
@@ -101,6 +104,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
             sound_track_path = f"{sound_temp_path}{self.track_id}.dts"
         command = subprocess.Popen([f"{self.mkv_extract_path}", "tracks", self.source_file, sound_track_path],
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        logger.info(f"{self.extract_track.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
             self.thread_manager.start(self.ui.sound.setText(f"extract sound: {line}"))
         t2 = time()
@@ -130,6 +134,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         self.sub_path = srt_path_fixed
         command = subprocess.Popen([f"{self.mkv_extract_path}", "tracks", self.source_file, srt_path],
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+        logger.info(f"{self.extract_sub.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
             self.thread_manager.start(self.ui.subtitle.setText(f"extract subtitle: {line}"))
         t2 = time()
@@ -173,6 +178,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
             sub_command = f'--language 0:{self.subtitle_lang} --track-name 0:"{self.subtitle_name}"'
             command = subprocess.Popen(f'{self.mkv_merge_path} -o {self.output_file} -A -S {self.source_file} {lang_name_command} {self.ac3_path} {sub_command} {self.sub_path}',
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            logger.info(f"{self.build_new_mkv.__name__} with subs: {command.stdout.readline()}")
             for line in command.stdout:
                 self.ui.mkv.setText(f"rebuild mkv: {line}")
             t2 = time()
@@ -183,6 +189,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         elif not self.subtitle_data:
             command = subprocess.Popen(rf'{self.mkv_merge_path} -o {self.output_file} -A {self.source_file} {lang_name_command} {self.ac3_path}',
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            logger.info(f"{self.build_new_mkv.__name__} no subs: {command.stdout.readline()}")
             for line in command.stdout:
                 self.ui.mkv.setText(f"rebuild mkv without subs: {line}")
             t2 = time()

@@ -36,7 +36,7 @@ class MKVMergeService:
                                   "name": f"{audio_name}", "language": f"{language}"}
                     info.append(audio_info)
                 except KeyError:
-                    audio_info = {"id": f"id: {audio_id}", "format": f"{audio_codec}",
+                    audio_info = {"id": f"{audio_id}", "format": f"{audio_codec}",
                                   "language": f"{language}"}
                     info.append(audio_info)
 
