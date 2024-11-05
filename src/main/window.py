@@ -1,4 +1,6 @@
 from PySide6 import QtWidgets, QtGui
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QRadialGradient, QColor
 from PySide6.QtWidgets import QAbstractItemView
 from loguru import logger
 
@@ -17,17 +19,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.source_file_name: str = None
         self.source_file_path: str = None
         self.output_file: str = None
-        self.temp_path: str = None
+        self.temp_path: str = ini_settings.get_temp_dir()
         self.track_data: dict = None
         self.subtitle_data: dict | None = None
         self.audio_model = None
         self.subtitle_model = None
         self.ui = UiMainWindow()
         self.ui.setupUi(self)
-        self.saved_temp_path = ini_settings.get_temp_dir()
         self.translate_ui()
         self.set_signals()
         self.init_list_model()
+        self.track_list: list = []
 
     @logger.catch
     def translate_ui(self) -> None:
@@ -41,8 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.subtitles_button.setDisabled(True)
         self.ui.source_label.setText(self.tr("Empty"))
         self.ui.target_label.setText(self.tr("Empty"))
-        if self.saved_temp_path:
-            self.ui.temp_label.setText(f"{self.saved_temp_path}")
+        if self.temp_path:
+            self.ui.temp_label.setText(f"{self.temp_path}")
         else:
             self.ui.temp_label.setText(self.tr("Empty"))
 
@@ -95,9 +97,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 codec = audio_track.get("format")
                 try:
                     track_name = audio_track.get("name")
-                    query = f"id: {track_id}\n format: {codec}\n name: {track_name}\n language: {language}"
+                    query = f"id: {track_id}\nformat: {codec}\nname: {track_name}\nlanguage: {language}"
                     item = QtGui.QStandardItem(query)
-                    data = {"id": track_id, "name": track_name, "lang": language}
+                    data = {"id": track_id, "codec": codec, "name": track_name, "lang": language}
                     item.setData(data)
                     self.audio_model.appendRow(item)
                 except KeyError as key_exc:
@@ -121,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     language = subtitle.get("language")
                     try:
                         sub_name = subtitle.get("name")
-                        query = f"id: {sub_id}\n name: {sub_name}\n language: {language}"
+                        query = f"id: {sub_id}\nname: {sub_name}\nlanguage: {language}"
                         item = QtGui.QStandardItem(query)
                         data = {"id": sub_id, "name": sub_name, "lang": language}
                         item.setData(data)
@@ -149,7 +151,6 @@ class MainWindow(QtWidgets.QMainWindow):
             new_mkv_name = f"{new_mkv_name}.rebuilded.mkv"
             self.source_file_name = new_mkv_name
             self.source_file_path = source_path
-            logger.info(f"source path: {source_path}")
             self.ui.source_label.setText(f"{source_path}")
             self.fill_audio_list(source_path)
             self.ui.subtitles_button.setDisabled(False)
@@ -179,10 +180,39 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
     @logger.catch
+    def set_selected_brush(self, model: QtGui.QStandardItem) -> None:
+        """Установка цвета при выборе объекта в списке звука/субтитров"""
+        gradient = QRadialGradient(50, 50, 50, 50, 50)
+        gradient.setColorAt(0, QColor.fromRgbF(0, 1, 0, 1))
+        gradient.setColorAt(1, QColor.fromRgbF(0, 0, 0, 0))
+        brush = QBrush(gradient)
+        model.setBackground(brush)
+
+    @logger.catch
+    def cansel_selected_brush(self, model: QtGui.QStandardItem) -> None:
+        """Установка цвета при отмене выборе объекта в списке звука/субтитров"""
+        gradient = QRadialGradient(50, 50, 50, 50, 50)
+        gradient.setColorAt(0, QColor.fromRgbF(255, 255, 255, 0.9))
+        brush = QBrush(gradient)
+        model.setBackground(brush)
+
+    @logger.catch
     def set_track_id(self, index) -> None:
         """Установка id звуковой дорожки"""
-        track_data = self.ui.audio_list.model().itemFromIndex(index)
-        self.track_data = track_data.data()
+        track = self.ui.audio_list.model().itemFromIndex(index)
+        data = track.data()
+        self.track_data = track.data()
+        # if data == self.track_data:
+        #     self.track_data = None
+        # if data not in self.track_list:
+        #     self.track_list.append(data)
+        #     self.set_selected_brush(track)
+        #     logger.info(f"track_list: {self.track_list}")
+        # elif data in self.track_list:
+        #     index = self.track_list.index(data)
+        #     self.track_list.pop(index)
+        #     self.cansel_selected_brush(track)
+        #     logger.info(f"track_list: {self.track_list}")
 
     @logger.catch
     def set_subtitle_id(self, index) -> None:
@@ -195,7 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_dir = self.ui.temp_label.text()
         target_file = self.ui.target_label.text()
         source_file = self.ui.source_label.text()
-        if temp_dir == "Empty" or target_file == "Empty" or source_file == "Empty":
+        if temp_dir == "Empty" or target_file == "Empty" or source_file == "Empty" or not self.track_data:
             pass
         else:
             self.settings_widget = SettingsWidget(main_window=self, source_file=self.source_file_path,
