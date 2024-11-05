@@ -46,6 +46,14 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ui.start_button.clicked.connect(self.start_rebuild)
 
     @logger.catch
+    def showEvent(self, event):
+        codec = self.track_data.get("codec")
+        if codec == "AC-3":
+            self.ui.bitrate_box.setDisabled(True)
+            self.bitrate = None
+            self.ui.start_button.setText(self.tr("Rebuild mkv with 1 ac3 track"))
+
+    @logger.catch
     def set_bitrate(self, bitrate: str) -> None:
         """Установка битрейта"""
         self.bitrate = int(bitrate)

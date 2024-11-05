@@ -67,16 +67,23 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         self.start_work()
 
     @logger.catch
-    def start_work(self) -> None:
-        """Начало работы"""
+    def set_data(self) -> None:
+        """Установка необходимой информации о звуковой дорожке и субтитрах"""
         self.track_id = self.track_data.get("id")
         self.track_name = self.track_data.get("name")
         self.track_lang = self.track_data.get("lang")
         if self.subtitle_data:
-            temp_path = generate_temp_dir(self.temp_path, self.track_id, self.subtitle_id)
+            logger.info(f"set sub data")
             self.subtitle_id = self.subtitle_data.get("id")
             self.subtitle_name = self.subtitle_data.get("name")
             self.subtitle_lang = self.subtitle_data.get("lang")
+
+    @logger.catch
+    def start_work(self) -> None:
+        """Начало работы"""
+        self.set_data()
+        if self.subtitle_data:
+            temp_path = generate_temp_dir(self.temp_path, self.track_id, self.subtitle_id)
             subtitle_temp_path_id = temp_path.get("sub_id")
             self.thread_manager.start(partial(self.extract_track, temp_path, subtitle_temp_path_id))
         else:
@@ -88,8 +95,11 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         """Извлечь звуковую дорожку"""
         t1 = time()
         sound_temp_path = temp_path.get("sound_id")
-        dts_path = f"{sound_temp_path}{self.track_id}.dts"
-        command = subprocess.Popen([f"{self.mkv_extract_path}", "tracks", self.source_file, dts_path],
+        if not self.bitrate:
+            sound_track_path = f"{sound_temp_path}{self.track_id}.ac3"
+        else:
+            sound_track_path = f"{sound_temp_path}{self.track_id}.dts"
+        command = subprocess.Popen([f"{self.mkv_extract_path}", "tracks", self.source_file, sound_track_path],
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         for line in command.stdout:
             self.thread_manager.start(self.ui.sound.setText(f"extract sound: {line}"))
@@ -98,6 +108,14 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         self.ui.sound.setText(f'Progress: 100, time is {elapsed} seconds.')
         if subtitle_temp_path_id:
             self.thread_manager.start(partial(self.extract_sub, subtitle_temp_path_id, temp_path))
+        elif not self.bitrate:
+            sound_path = temp_path.get("sound")
+            ac3_path = f"{sound_path}{self.track_id}.ac3"
+            ac3_path_fixed = os.path.abspath(ac3_path)
+            self.ac3_path = ac3_path_fixed
+            self.ui.subtitle.setText(self.tr("Skipped"))
+            self.ui.ac3.setText(self.tr("Skipped"))
+            self.thread_manager.start(partial(self.build_new_mkv))
         else:
             self.thread_manager.start(partial(self.convert_to_ac, temp_path))
 
@@ -117,6 +135,13 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         t2 = time()
         elapsed = t2 - t1
         self.ui.subtitle.setText(f'Progress: 100, time is {elapsed} seconds.')
+        if not self.bitrate:
+            sound_path = temp_path.get("sound")
+            ac3_path = f"{sound_path}{self.track_id}.ac3"
+            ac3_path_fixed = os.path.abspath(ac3_path)
+            self.ac3_path = ac3_path_fixed
+            self.ui.ac3.setText(self.tr("Skipped"))
+            self.thread_manager.start(partial(self.build_new_mkv))
         if temp_path:
             self.thread_manager.start(partial(self.convert_to_ac, temp_path))
 
@@ -144,25 +169,24 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         """Собрать новый mkv"""
         t1 = time()
         lang_name_command = f'--language 0:{self.track_lang} --track-name 0:"{self.track_name}"'
-        if self.subtitle_id is not None:
+        if self.subtitle_data:
             sub_command = f'--language 0:{self.subtitle_lang} --track-name 0:"{self.subtitle_name}"'
             command = subprocess.Popen(f'{self.mkv_merge_path} -o {self.output_file} -A -S {self.source_file} {lang_name_command} {self.ac3_path} {sub_command} {self.sub_path}',
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             for line in command.stdout:
-                self.ui.mkv.setText(f"dts to mkv: {line}")
-            logger.info(f"rebuild complete")
+                self.ui.mkv.setText(f"rebuild mkv: {line}")
             t2 = time()
             elapsed = t2 - t1
             self.ui.mkv.setText(f'dts to mkv: Progress: 100, time is {elapsed} seconds.')
             self.main_window.setEnabled(True)
-            self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
-        else:
+            # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
+        elif not self.subtitle_data:
             command = subprocess.Popen(rf'{self.mkv_merge_path} -o {self.output_file} -A {self.source_file} {lang_name_command} {self.ac3_path}',
                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
             for line in command.stdout:
-                self.ui.mkv.setText(f"dts to mkv: {line}")
+                self.ui.mkv.setText(f"rebuild mkv without subs: {line}")
             t2 = time()
             elapsed = t2 - t1
             self.ui.mkv.setText(f'Progress: 100, time is {elapsed} seconds.')
             self.main_window.setEnabled(True)
-            self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
+            # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)

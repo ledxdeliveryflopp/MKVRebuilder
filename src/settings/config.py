@@ -21,13 +21,15 @@ class IniConfig:
                 self.config.write(file)
 
     @logger.catch
-    def get_temp_dir(self) -> str:
+    def get_temp_dir(self) -> str | None:
         """Путь к временной директории"""
         self.config.read("config/config.ini")
         if "DIRS" in self.config:
             temp_path = self.config["DIRS"]["temp"]
             if temp_path:
                 return temp_path
+        else:
+            return None
 
     @logger.catch
     def change_temp_dir_section(self, temp_dir: str) -> None:
