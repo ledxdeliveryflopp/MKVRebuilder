@@ -142,7 +142,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
             self.ac3_path = ac3_path_fixed
             self.ui.ac3.setText(self.tr("Skipped"))
             self.thread_manager.start(partial(self.build_new_mkv))
-        if temp_path:
+        if temp_path and self.bitrate:
             self.thread_manager.start(partial(self.convert_to_ac, temp_path))
 
     @logger.catch
