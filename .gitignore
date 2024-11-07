@@ -168,3 +168,6 @@ main.dist
 track_info.json
 application.log
 
+# config
+config/
+
