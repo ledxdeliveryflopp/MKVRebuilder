@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'settings_widget.ui'
+## Form generated from reading UI file 'console_widget.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.0
 ##
@@ -15,49 +15,41 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QLabel, QPushButton,
-    QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QLabel, QSizePolicy, QVBoxLayout,
+    QWidget)
 
-class UiSettingsWidget(object):
-    def setupUi(self, settings_widget):
-        if not settings_widget.objectName():
-            settings_widget.setObjectName(u"settings_widget")
-        settings_widget.resize(365, 258)
-        self.verticalLayout_2 = QVBoxLayout(settings_widget)
+class UiRebuilderWidget(object):
+    def setupUi(self, console_widget):
+        if not console_widget.objectName():
+            console_widget.setObjectName(u"console_widget")
+        console_widget.resize(400, 300)
+        self.verticalLayout_2 = QVBoxLayout(console_widget)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.main_layout = QVBoxLayout()
         self.main_layout.setObjectName(u"main_layout")
-        self.verticalSpacer = QSpacerItem(20, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.sound = QLabel(console_widget)
+        self.sound.setObjectName(u"sound")
 
-        self.main_layout.addItem(self.verticalSpacer)
+        self.main_layout.addWidget(self.sound)
 
-        self.bitrate_label = QLabel(settings_widget)
-        self.bitrate_label.setObjectName(u"bitrate_label")
-        self.bitrate_label.setMaximumSize(QSize(500, 50))
+        self.subtitle = QLabel(console_widget)
+        self.subtitle.setObjectName(u"subtitle")
 
-        self.main_layout.addWidget(self.bitrate_label)
+        self.main_layout.addWidget(self.subtitle)
 
-        self.bitrate_box = QComboBox(settings_widget)
-        self.bitrate_box.setObjectName(u"bitrate_box")
+        self.ac3 = QLabel(console_widget)
+        self.ac3.setObjectName(u"ac3")
 
-        self.main_layout.addWidget(self.bitrate_box, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.main_layout.addWidget(self.ac3)
 
-        self.verticalSpacer_3 = QSpacerItem(20, 1, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.mkv = QLabel(console_widget)
+        self.mkv.setObjectName(u"mkv")
 
-        self.main_layout.addItem(self.verticalSpacer_3)
-
-        self.start_button = QPushButton(settings_widget)
-        self.start_button.setObjectName(u"start_button")
-
-        self.main_layout.addWidget(self.start_button, 0, Qt.AlignmentFlag.AlignVCenter)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-
-        self.main_layout.addItem(self.verticalSpacer_2)
-
+        self.main_layout.addWidget(self.mkv)
 
         self.verticalLayout_2.addLayout(self.main_layout)
 
-        QMetaObject.connectSlotsByName(settings_widget)
+
+        QMetaObject.connectSlotsByName(console_widget)
 
 

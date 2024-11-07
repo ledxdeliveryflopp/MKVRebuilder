@@ -86,10 +86,10 @@ class UiMainWindow(object):
 
         self.main_layout.addItem(self.verticalSpacer_3)
 
-        self.settings_button = QPushButton(self.centralwidget)
-        self.settings_button.setObjectName(u"settings_button")
+        self.start_button = QPushButton(self.centralwidget)
+        self.start_button.setObjectName(u"settings_button")
 
-        self.main_layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.main_layout.addWidget(self.start_button, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self.verticalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
 

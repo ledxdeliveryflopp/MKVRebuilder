@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.info.service import mkv_merge_service
 from src.main.widget_ui import UiMainWindow
-from src.rebuilder.widget import SettingsWidget
+from src.rebuilder.widget import RebuilderWidget
 
 from src.settings.config import ini_settings
 
@@ -15,17 +15,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self) -> None:
         super().__init__()
-        self.source_file_name: str = None
-        self.source_file_path: str = None
-        self.output_file: str = None
         self.temp_path: str = ini_settings.get_temp_dir()
         self.output_path: str = ini_settings.get_output_dir()
-        self.track_data: dict = None
+        self.source_file_name: str | None = None
+
+        self.source_path: str | None = None
+        self.output_file: str | None = None
+
+        self.track_data: dict | None = None
         self.subtitle_data: dict | None = None
         self.bitrate: int = 192
+        self.restricted_codec: str | None = None
+
+        self.restricted_codec_list: list = ["AC-3", "E-AC-3"]
         self.audio_model = None
         self.subtitle_model = None
-        self.settings_widget: QtWidgets = None
+        self.rebuilder_widget: QtWidgets = None
+
         self.ui = UiMainWindow()
         self.ui.setupUi(self)
         self.translate_ui()
@@ -36,12 +42,13 @@ class MainWindow(QtWidgets.QMainWindow):
     @logger.catch
     def translate_ui(self) -> None:
         """Перевод интерфейса"""
+        self.setWindowTitle("MKVRebuilder")
         self.ui.source_button.setText(self.tr("Set source file"))
         self.ui.target_button.setDisabled(True)
         self.ui.target_button.setText(self.tr("Set output directory"))
         self.ui.temp_button.setText(self.tr("Set temp directory"))
         self.ui.bitrate_label.setText(self.tr("Choose bitrate"))
-        self.ui.settings_button.setText(self.tr("Configurate ac3 file"))
+        self.ui.start_button.setText(self.tr("Start rebuilding mkv"))
         self.ui.subtitles_button.setText(self.tr("Update subtitles"))
         self.ui.subtitles_button.setDisabled(True)
         self.ui.source_label.setText(self.tr("Empty"))
@@ -70,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.target_button.clicked.connect(self.set_output_dir)
         self.ui.temp_button.clicked.connect(self.set_temp_dir)
         self.ui.subtitles_button.clicked.connect(self.fill_subtitle_list)
-        self.ui.settings_button.clicked.connect(self.open_settings_widget)
+        self.ui.start_button.clicked.connect(self.open_rebuilder_widget)
         self.ui.audio_list.pressed.connect(self.set_track_id)
         self.ui.subtitle_list.pressed.connect(self.set_subtitle_id)
         self.ui.bitrate_box.currentTextChanged.connect(self.set_bitrate)
@@ -159,6 +166,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 logger.error(f"{self.fill_subtitle_list.__name__} - {exc})")
         else:
             self.subtitle_model.removeRows(0, row_count)
+            if self.subtitle_data:
+                self.subtitle_data = None
 
     @logger.catch
     def off_subtitle_list(self) -> None:
@@ -166,6 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         row_count = self.subtitle_model.rowCount()
         self.subtitle_model.removeRows(0, row_count)
         self.ui.subtitles_button.setChecked(False)
+        self.subtitle_data = None
 
     @logger.catch
     def set_source_file(self) -> None:
@@ -178,7 +188,7 @@ class MainWindow(QtWidgets.QMainWindow):
             new_mkv_name = mkv_name[data_len - 1]
             new_mkv_name = f"{new_mkv_name}.rebuilded.mkv"
             self.source_file_name = new_mkv_name
-            self.source_file_path = source_path
+            self.source_path = source_path
             self.ui.source_label.setText(f"{source_path}")
             self.fill_audio_list(source_path)
             self.ui.subtitles_button.setDisabled(False)
@@ -237,6 +247,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """Установка id звуковой дорожки"""
         track = self.ui.audio_list.model().itemFromIndex(index)
         self.track_data = track.data()
+        codec = self.track_data.get("codec")
+        if codec in self.restricted_codec_list:
+            self.restricted_codec = codec
+            self.ui.bitrate_box.setDisabled(True)
+            self.ui.start_button.setText(self.tr(f"Start rebuild mkv with {codec}"))
+        else:
+            self.ui.bitrate_box.setDisabled(False)
+            self.restricted_codec = None
 
     @logger.catch
     def set_subtitle_id(self, index) -> None:
@@ -245,14 +263,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.subtitle_data = subtitle_data.data()
 
     @logger.catch
-    def open_settings_widget(self) -> None:
+    def open_rebuilder_widget(self) -> None:
+        """Открытие виджета сборки"""
         temp_dir = self.ui.temp_label.text()
         target_file = self.ui.target_label.text()
         source_file = self.ui.source_label.text()
         if temp_dir == "Empty" or target_file == "Empty" or source_file == "Empty" or not self.track_data:
-            pass
+            self.ui.start_button.setText(self.tr(f"Temp dir/output dir/source file/sound track dont selected"))
         else:
-            self.settings_widget = SettingsWidget(main_window=self, source_file=self.source_file_path,
-                                                  output_file=self.output_file, track_data=self.track_data,
-                                                  subtitle_data=self.subtitle_data, temp_path=self.temp_path)
-            self.settings_widget.show()
+            self.rebuilder_widget = RebuilderWidget(self, self.source_path, self.output_file, self.track_data,
+                                                    self.subtitle_data, self.temp_path, self.bitrate,
+                                                    self.restricted_codec)
+            self.rebuilder_widget.show()
