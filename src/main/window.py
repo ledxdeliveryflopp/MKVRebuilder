@@ -19,33 +19,49 @@ class MainWindow(QtWidgets.QMainWindow):
         self.source_file_path: str = None
         self.output_file: str = None
         self.temp_path: str = ini_settings.get_temp_dir()
+        self.output_path: str = ini_settings.get_output_dir()
         self.track_data: dict = None
         self.subtitle_data: dict | None = None
+        self.bitrate: int = 192
         self.audio_model = None
         self.subtitle_model = None
+        self.settings_widget: QtWidgets = None
         self.ui = UiMainWindow()
         self.ui.setupUi(self)
         self.translate_ui()
         self.set_signals()
         self.init_list_model()
-        self.track_list: list = []
+        self.set_bitrate_variants()
 
     @logger.catch
     def translate_ui(self) -> None:
         """Перевод интерфейса"""
         self.ui.source_button.setText(self.tr("Set source file"))
-        self.ui.target_button.setText(self.tr("Set output directory"))
         self.ui.target_button.setDisabled(True)
+        self.ui.target_button.setText(self.tr("Set output directory"))
         self.ui.temp_button.setText(self.tr("Set temp directory"))
+        self.ui.bitrate_label.setText(self.tr("Choose bitrate"))
         self.ui.settings_button.setText(self.tr("Configurate ac3 file"))
         self.ui.subtitles_button.setText(self.tr("Update subtitles"))
         self.ui.subtitles_button.setDisabled(True)
         self.ui.source_label.setText(self.tr("Empty"))
-        self.ui.target_label.setText(self.tr("Empty"))
         if self.temp_path:
             self.ui.temp_label.setText(f"{self.temp_path}")
         else:
             self.ui.temp_label.setText(self.tr("Empty"))
+        if self.output_path:
+            self.ui.target_label.setText(f"{self.output_path}")
+        else:
+            self.ui.target_label.setText(self.tr("Empty"))
+
+    @logger.catch
+    def set_bitrate_variants(self) -> None:
+        """Установка возможных битрейтов"""
+        self.ui.bitrate_box.addItem("192")
+        self.ui.bitrate_box.addItem("256")
+        self.ui.bitrate_box.addItem("384")
+        self.ui.bitrate_box.addItem("448")
+        self.ui.bitrate_box.addItem("640")
 
     @logger.catch
     def set_signals(self) -> None:
@@ -57,6 +73,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.settings_button.clicked.connect(self.open_settings_widget)
         self.ui.audio_list.pressed.connect(self.set_track_id)
         self.ui.subtitle_list.pressed.connect(self.set_subtitle_id)
+        self.ui.bitrate_box.currentTextChanged.connect(self.set_bitrate)
 
     @logger.catch
     def init_list_model(self) -> None:
@@ -69,6 +86,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.subtitle_list.setSpacing(5)
         self.ui.audio_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.ui.subtitle_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+    @logger.catch
+    def set_bitrate(self, bitrate: str) -> None:
+        """Установка битрейта"""
+        self.bitrate = int(bitrate)
 
     @logger.catch
     def get_info_about_source_file_sound(self, source_path: str) -> list:
@@ -139,6 +161,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.subtitle_model.removeRows(0, row_count)
 
     @logger.catch
+    def off_subtitle_list(self) -> None:
+        """Отчистить и отключить список субтитров"""
+        row_count = self.subtitle_model.rowCount()
+        self.subtitle_model.removeRows(0, row_count)
+        self.ui.subtitles_button.setChecked(False)
+
+    @logger.catch
     def set_source_file(self) -> None:
         """Выбор источника"""
         source_path = QtWidgets.QFileDialog.getOpenFileName(self, self.tr("Select source"),  filter="mkv(*.mkv)")[0]
@@ -154,16 +183,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fill_audio_list(source_path)
             self.ui.subtitles_button.setDisabled(False)
             self.ui.target_button.setDisabled(False)
+            self.off_subtitle_list()
+            if self.output_path:
+                self.output_file = f"{self.output_path}/{self.source_file_name}"
+                self.ui.target_label.setText(f"{self.output_path}/{self.source_file_name}")
         else:
             pass
 
     @logger.catch
     def set_output_dir(self) -> None:
         """Целевая директория для сохранения"""
-        target_path = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select target"))
-        if target_path:
-            self.output_file = f"{target_path}/{self.source_file_name}"
-            self.ui.target_label.setText(f"{target_path}/{self.source_file_name}")
+        output_path = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select target"))
+        if output_path:
+            self.output_path = output_path
+            ini_settings.change_output_dir_section(output_path, self.temp_path)
+            if self.source_file_name:
+                self.output_file = f"{output_path}/{self.source_file_name}"
+                self.ui.target_label.setText(f"{output_path}/{self.source_file_name}")
         else:
             pass
 
@@ -173,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_dir = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select temp dir"))
         if temp_dir:
             self.ui.temp_label.setText(f"{temp_dir}")
-            ini_settings.change_temp_dir_section(temp_dir)
+            ini_settings.change_temp_dir_section(temp_dir, self.output_path)
             self.temp_path = temp_dir
         else:
             pass
@@ -200,24 +236,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def set_track_id(self, index) -> None:
         """Установка id звуковой дорожки"""
         track = self.ui.audio_list.model().itemFromIndex(index)
-        data = track.data()
         self.track_data = track.data()
-        # elif data != self.track_data and self.track_data:
-        #     print('test1')
-        #     self.cansel_selected_brush(previus_track)
-        #     self.track_data = track.data()
-        # elif data == self.track_data:
-        #     self.track_data = None
-        #     self.cansel_selected_brush(track)
-        # if data not in self.track_list:
-        #     self.track_list.append(data)
-        #     self.set_selected_brush(track)
-        #     logger.info(f"track_list: {self.track_list}")
-        # elif data in self.track_list:
-        #     index = self.track_list.index(data)
-        #     self.track_list.pop(index)
-        #     self.cansel_selected_brush(track)
-        #     logger.info(f"track_list: {self.track_list}")
 
     @logger.catch
     def set_subtitle_id(self, index) -> None:
