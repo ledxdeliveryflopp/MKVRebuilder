@@ -201,14 +201,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """Установка id звуковой дорожки"""
         track = self.ui.audio_list.model().itemFromIndex(index)
         data = track.data()
-        logger.info(f"{self.track_data}")
-        if data != self.track_data:
-            self.track_data = track.data()
-            logger.info(f"fill: {self.track_data}")
-            self.set_selected_brush(track)
-        elif data == self.track_data:
-            self.track_data = None
-            self.cansel_selected_brush(track)
+        self.track_data = track.data()
+        # elif data != self.track_data and self.track_data:
+        #     print('test1')
+        #     self.cansel_selected_brush(previus_track)
+        #     self.track_data = track.data()
+        # elif data == self.track_data:
+        #     self.track_data = None
+        #     self.cansel_selected_brush(track)
         # if data not in self.track_list:
         #     self.track_list.append(data)
         #     self.set_selected_brush(track)

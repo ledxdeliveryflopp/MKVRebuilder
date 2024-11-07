@@ -18,7 +18,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
 
     def __init__(self, main_window: QtWidgets.QMainWindow,
                  source_file: str, output_file: str, track_data: dict, subtitle_data: dict | None, temp_path: str,
-                 bitrate: int):
+                 bitrate: int, eac3_mode: bool):
         super().__init__()
         self.main_window = main_window
         self.source_file: str = source_file
@@ -34,10 +34,12 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         self.temp_path: str = temp_path
         self.bitrate: int = bitrate
         self.ac3_path: str = None
+        self.eac3_path: str = None
         self.sub_path: str = None
-        self.mkv_extract_path: str = None
         self.mkv_merge_path: str = None
+        self.mkv_extract_path: str = None
         self.ac3_converter: str = None
+        self.eac3_mode: bool = eac3_mode
         self.model = None
         self.ui = Ui_console_widget()
         self.ui.setupUi(self)
@@ -50,7 +52,7 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         self.ui.subtitle.setText(self.tr("extract subtitle: Not started"))
         self.ui.ac3.setText(self.tr("convert dts to ac3: Not started"))
         self.ui.mkv.setText(self.tr("build new mkv: Not started"))
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowType.WindowMinimizeButtonHint)
 
     @logger.catch
     def set_mkv_ac3_tools_path(self) -> None:
@@ -75,7 +77,6 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         except KeyError as track_name_none:
             self.track_name = "Auto fill name"
         if self.subtitle_data:
-            logger.info(f"set sub data")
             self.subtitle_id = self.subtitle_data.get("id")
             self.subtitle_name = self.subtitle_data.get("name")
             self.subtitle_lang = self.subtitle_data.get("lang")
@@ -97,7 +98,9 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         """Извлечь звуковую дорожку"""
         t1 = time()
         sound_temp_path = temp_path.get("sound_id")
-        if not self.bitrate:
+        if self.eac3_mode is True:
+            sound_track_path = f"{sound_temp_path}{self.track_id}.eac3"
+        elif not self.bitrate:
             sound_track_path = f"{sound_temp_path}{self.track_id}.ac3"
         else:
             sound_track_path = f"{sound_temp_path}{self.track_id}.dts"
@@ -107,10 +110,19 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         for line in command.stdout:
             self.thread_manager.start(self.ui.sound.setText(self.tr(f"extract sound: {line}")))
         t2 = time()
-        elapsed = t2 - t1
-        self.ui.sound.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
+        summary_time = t2 - t1
+        elapsed = summary_time / 60
+        self.ui.sound.setText(self.tr(f'extracting sound track progress 100: %.3f minutes' % elapsed))
         if subtitle_temp_path_id:
             self.thread_manager.start(partial(self.extract_sub, subtitle_temp_path_id, temp_path))
+        elif self.eac3_mode is True:
+            sound_path = temp_path.get("sound")
+            eac3_path = f"{sound_path}{self.track_id}.eac3"
+            eac3_path_fixed = os.path.abspath(eac3_path)
+            self.eac3_path = eac3_path_fixed
+            self.ui.subtitle.setText(self.tr("Skipped"))
+            self.ui.ac3.setText(self.tr("Skipped"))
+            self.thread_manager.start(partial(self.build_new_mkv))
         elif not self.bitrate:
             sound_path = temp_path.get("sound")
             ac3_path = f"{sound_path}{self.track_id}.ac3"
@@ -137,16 +149,24 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         for line in command.stdout:
             self.thread_manager.start(self.ui.subtitle.setText(self.tr(f"extract subtitle: {line}")))
         t2 = time()
-        elapsed = t2 - t1
-        self.ui.subtitle.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
-        if not self.bitrate:
+        summary_time = t2 - t1
+        elapsed = summary_time / 60
+        self.ui.subtitle.setText(self.tr(f'extracting subtitles progress 100: %.3f minutes' % elapsed))
+        if self.eac3_mode is True:
+            sound_path = temp_path.get("sound")
+            eac3_path = f"{sound_path}{self.track_id}.eac3"
+            eac3_path_fixed = os.path.abspath(eac3_path)
+            self.eac3_path = eac3_path_fixed
+            self.ui.ac3.setText(self.tr("Skipped"))
+            self.thread_manager.start(partial(self.build_new_mkv))
+        elif not self.bitrate:
             sound_path = temp_path.get("sound")
             ac3_path = f"{sound_path}{self.track_id}.ac3"
             ac3_path_fixed = os.path.abspath(ac3_path)
             self.ac3_path = ac3_path_fixed
             self.ui.ac3.setText(self.tr("Skipped"))
             self.thread_manager.start(partial(self.build_new_mkv))
-        if temp_path and self.bitrate:
+        elif temp_path and self.bitrate:
             self.thread_manager.start(partial(self.convert_to_ac, temp_path))
 
     @logger.catch
@@ -164,8 +184,9 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         subprocess.run([f"{self.ac3_converter}", dts_path, self.ac3_path, f"-{self.bitrate}", f"-down6"],
                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         t2 = time()
-        elapsed = t2 - t1
-        self.ui.ac3.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
+        summary_time = t2 - t1
+        elapsed = summary_time / 60
+        self.ui.ac3.setText(self.tr(f'dts to ac3 progress 100: %.3f minutes' % elapsed))
         self.thread_manager.start(self.build_new_mkv)
 
     @logger.catch
@@ -173,6 +194,28 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
         """Собрать новый mkv"""
         t1 = time()
         lang_name_command = f'--language 0:{self.track_lang} --track-name 0:"{self.track_name}"'
+        if self.subtitle_data and self.eac3_mode is True:
+            sub_command = f'--language 0:{self.subtitle_lang} --track-name 0:"{self.subtitle_name}"'
+            command = subprocess.Popen(
+                f'{self.mkv_merge_path} -o {self.output_file} -A -S {self.source_file} {lang_name_command} {self.eac3_path} {sub_command} {self.sub_path}',
+                stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            for line in command.stdout:
+                self.ui.mkv.setText(self.tr(f"rebuild mkv: {line}"))
+            t2 = time()
+            summary_time = t2 - t1
+            elapsed = summary_time / 60
+            self.ui.mkv.setText(self.tr(f'rebuild mkv progress 100: %.3f minutes' % elapsed))
+            self.main_window.setEnabled(True)
+        elif not self.subtitle_data and self.eac3_mode is True:
+            command = subprocess.Popen(rf'{self.mkv_merge_path} -o {self.output_file} -A {self.source_file} {lang_name_command} {self.eac3_path}',
+                                        stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            for line in command.stdout:
+                self.ui.mkv.setText(self.tr(f"rebuild mkv without subs: {line}"))
+            t2 = time()
+            summary_time = t2 - t1
+            elapsed = summary_time / 60
+            self.ui.mkv.setText(self.tr(f'rebuild mkv progress 100: %.3f minutes' % elapsed))
+            self.main_window.setEnabled(True)
         if self.subtitle_data:
             sub_command = f'--language 0:{self.subtitle_lang} --track-name 0:"{self.subtitle_name}"'
             command = subprocess.Popen(f'{self.mkv_merge_path} -o {self.output_file} -A -S {self.source_file} {lang_name_command} {self.ac3_path} {sub_command} {self.sub_path}',
@@ -181,8 +224,9 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
             for line in command.stdout:
                 self.ui.mkv.setText(self.tr(f"rebuild mkv: {line}"))
             t2 = time()
-            elapsed = t2 - t1
-            self.ui.mkv.setText(self.tr(f'dts to mkv: Progress: 100, time is {elapsed} seconds.'))
+            summary_time = t2 - t1
+            elapsed = summary_time / 60
+            self.ui.mkv.setText(self.tr(f'rebuild mkv progress 100: %.3f minutes' % elapsed))
             self.main_window.setEnabled(True)
             # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)
         elif not self.subtitle_data:
@@ -192,7 +236,8 @@ class ConsoleWidget(QtWidgets.QWidget, ThreadManager):
             for line in command.stdout:
                 self.ui.mkv.setText(self.tr(f"rebuild mkv without subs: {line}"))
             t2 = time()
-            elapsed = t2 - t1
-            self.ui.mkv.setText(self.tr(f'Progress: 100, time is {elapsed} seconds.'))
+            summary_time = t2 - t1
+            elapsed = summary_time / 60
+            self.ui.mkv.setText(self.tr(f'rebuild mkv progress 100: %.3f minutes' % elapsed))
             self.main_window.setEnabled(True)
             # self.setWindowFlags(QtCore.Qt.WindowSystemMenuHint)

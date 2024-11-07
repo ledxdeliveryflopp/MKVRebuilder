@@ -18,6 +18,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.subtitle_data: dict | None = subtitle_data
         self.temp_path: str = temp_path
         self.bitrate: int = 192
+        self.eac3_mode: bool = False
         self.ui = UiSettingsWidget()
         self.ui.setupUi(self)
         self.translate_ui()
@@ -52,6 +53,11 @@ class SettingsWidget(QtWidgets.QWidget):
             self.ui.bitrate_box.setDisabled(True)
             self.bitrate = None
             self.ui.start_button.setText(self.tr("Rebuild mkv with 1 ac3 track"))
+        elif codec == "E-AC-3":
+            self.ui.bitrate_box.setDisabled(True)
+            self.eac3_mode = True
+            self.bitrate = None
+            self.ui.start_button.setText(self.tr("Rebuild mkv with 1 eac3 track"))
 
     @logger.catch
     def set_bitrate(self, bitrate: str) -> None:
@@ -61,8 +67,7 @@ class SettingsWidget(QtWidgets.QWidget):
     @logger.catch
     def start_rebuild(self) -> None:
         """"""
-
         self.console_widget = ConsoleWidget(self.main_window, self.source_file, self.output_file, self.track_data,
-                                            self.subtitle_data, self.temp_path, self.bitrate)
+                                            self.subtitle_data, self.temp_path, self.bitrate, self.eac3_mode)
         self.console_widget.show()
         self.close()
