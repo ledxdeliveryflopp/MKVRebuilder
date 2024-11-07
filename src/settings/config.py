@@ -16,7 +16,7 @@ class IniConfig:
         path = os.path.exists("config/config.ini")
         if path is False:
             os.makedirs(rf"{os.getcwd()}\config")
-            self.config["DIRS"] = {"temp": ""}
+            self.config["DIRS"] = {"temp": "", "output": ""}
             with open("config/config.ini", "w") as file:
                 self.config.write(file)
 
@@ -32,9 +32,20 @@ class IniConfig:
             return None
 
     @logger.catch
-    def change_temp_dir_section(self, temp_dir: str) -> None:
+    def get_output_dir(self) -> str | None:
+        """Путь к директории сохранения mkv"""
+        self.config.read("config/config.ini")
+        if "DIRS" in self.config:
+            output_path = self.config["DIRS"]["output"]
+            if output_path:
+                return output_path
+        else:
+            return None
+
+    @logger.catch
+    def change_temp_dir_section(self, temp_dir: str, output_dir: str) -> None:
         path = os.path.exists("config/config.ini")
-        self.config["DIRS"] = {"temp": temp_dir}
+        self.config["DIRS"] = {"temp": temp_dir, "output": output_dir}
         if path is True:
             with open("config/config.ini", "w") as file:
                 self.config.write(file)
@@ -42,6 +53,20 @@ class IniConfig:
             self.set_base_ini_config()
             with open("config/config.ini", "w") as file:
                 self.config.write(file)
+
+    @logger.catch
+    def change_output_dir_section(self, output_dir: str, temp_dir: str) -> None:
+        path = os.path.exists("config/config.ini")
+        self.config["DIRS"] = {"temp": temp_dir, "output": output_dir}
+        print("test")
+        if path is True:
+            with open("config/config.ini", "w") as file:
+                self.config.write(file)
+        else:
+            self.set_base_ini_config()
+            with open("config/config.ini", "w") as file:
+                self.config.write(file)
+
 
 def init_ini_settings() -> IniConfig:
     return IniConfig()

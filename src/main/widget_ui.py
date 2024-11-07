@@ -8,15 +8,23 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QMetaObject, QRect, QSize, Qt)
-from PySide6.QtWidgets import (QHBoxLayout, QLabel, QListView, QMenuBar, QPushButton, QRadioButton, QSizePolicy,
-                               QSpacerItem, QStatusBar, QVBoxLayout, QWidget)
+from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
+    QMetaObject, QObject, QPoint, QRect,
+    QSize, QTime, QUrl, Qt)
+from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
+    QFont, QFontDatabase, QGradient, QIcon,
+    QImage, QKeySequence, QLinearGradient, QPainter,
+    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QLabel,
+    QListView, QMainWindow, QMenuBar, QPushButton,
+    QRadioButton, QSizePolicy, QSpacerItem, QStatusBar,
+    QVBoxLayout, QWidget)
 
 class UiMainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(722, 679)
+        MainWindow.resize(706, 679)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_2 = QVBoxLayout(self.centralwidget)
@@ -29,8 +37,9 @@ class UiMainWindow(object):
         self.main_layout.addWidget(self.source_button)
 
         self.source_label = QLabel(self.centralwidget)
-        self.source_label.setAlignment(Qt.AlignCenter)
         self.source_label.setObjectName(u"source_label")
+        self.source_label.setMaximumSize(QSize(16777215, 50))
+        self.source_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.source_label)
 
@@ -41,7 +50,8 @@ class UiMainWindow(object):
 
         self.target_label = QLabel(self.centralwidget)
         self.target_label.setObjectName(u"target_label")
-        self.target_label.setAlignment(Qt.AlignCenter)
+        self.target_label.setMaximumSize(QSize(16777215, 50))
+        self.target_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.target_label)
 
@@ -52,7 +62,8 @@ class UiMainWindow(object):
 
         self.temp_label = QLabel(self.centralwidget)
         self.temp_label.setObjectName(u"temp_label")
-        self.temp_label.setAlignment(Qt.AlignCenter)
+        self.temp_label.setMaximumSize(QSize(16777215, 50))
+        self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.temp_label)
 
@@ -60,10 +71,25 @@ class UiMainWindow(object):
 
         self.main_layout.addItem(self.verticalSpacer)
 
-        self.settings_button = QPushButton(self.centralwidget)
-        self.settings_button.setObjectName(u"settings_button")
+        self.bitrate_label = QLabel(self.centralwidget)
+        self.bitrate_label.setObjectName(u"bitrate_label")
+        self.bitrate_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.main_layout.addWidget(self.settings_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.main_layout.addWidget(self.bitrate_label)
+
+        self.bitrate_box = QComboBox(self.centralwidget)
+        self.bitrate_box.setObjectName(u"bitrate_box")
+
+        self.main_layout.addWidget(self.bitrate_box)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+
+        self.main_layout.addItem(self.verticalSpacer_3)
+
+        self.start_button = QPushButton(self.centralwidget)
+        self.start_button.setObjectName(u"settings_button")
+
+        self.main_layout.addWidget(self.start_button, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self.verticalSpacer_2 = QSpacerItem(20, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
 
@@ -110,12 +136,11 @@ class UiMainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 722, 22))
+        self.menubar.setGeometry(QRect(0, 0, 706, 22))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+
         QMetaObject.connectSlotsByName(MainWindow)
-
-
