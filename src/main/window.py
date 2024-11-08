@@ -1,6 +1,8 @@
+from typing import Any
+
 from PySide6 import QtWidgets, QtGui
-from PySide6.QtGui import QBrush, QRadialGradient, QColor
-from PySide6.QtWidgets import QAbstractItemView
+from PySide6.QtGui import QBrush, QRadialGradient, QColor, QAction
+from PySide6.QtWidgets import QAbstractItemView, QMenuBar
 from loguru import logger
 
 from src.info.service import mkv_merge_service
@@ -32,12 +34,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.subtitle_model = None
         self.rebuilder_widget: QtWidgets = None
 
+        self.black_style_button: QAction | None = None
+        self.standard_style_button: QAction | None = None
+        self.menu: QMenuBar | None = None
+
         self.ui = UiMainWindow()
         self.ui.setupUi(self)
         self.translate_ui()
+        self.set_objects_name()
         self.set_signals()
         self.init_list_model()
         self.set_bitrate_variants()
+        self.set_settings_menu()
 
     @logger.catch
     def translate_ui(self) -> None:
@@ -52,14 +60,54 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.subtitles_button.setText(self.tr("Update subtitles"))
         self.ui.subtitles_button.setDisabled(True)
         self.ui.source_label.setText(self.tr("Empty"))
+        self.ui.source_label.setProperty("source_empty", True)
+        self.unpolish_and_polish_style(self.ui.source_label)
         if self.temp_path:
             self.ui.temp_label.setText(f"{self.temp_path}")
         else:
             self.ui.temp_label.setText(self.tr("Empty"))
+            self.ui.temp_label.setProperty("temp_empty", True)
+            self.unpolish_and_polish_style(self.ui.temp_label)
         if self.output_path:
             self.ui.target_label.setText(f"{self.output_path}")
         else:
             self.ui.target_label.setText(self.tr("Empty"))
+            self.ui.target_label.setProperty("target_empty", True)
+            self.unpolish_and_polish_style(self.ui.target_label)
+
+    @logger.catch
+    def set_settings_menu(self) -> None:
+        """Установить меню стилей"""
+        self.black_style_button = QAction(self.tr("Black theme"), self)
+        self.black_style_button.triggered.connect(self.set_black_style)
+
+        self.standard_style_button = QAction(self.tr("Standard theme"), self)
+        self.standard_style_button.triggered.connect(self.set_standard_style)
+
+        self.menu = self.menuBar()
+        style_menu = self.menu.addMenu(self.tr("Style"))
+
+        style_menu.addAction(self.black_style_button)
+        style_menu.addSeparator()
+        style_menu.addAction(self.standard_style_button)
+        style_menu.addSeparator()
+
+    @logger.catch
+    def set_objects_name(self) -> None:
+        """Установка названий объектов для кнопок и тд"""
+        self.ui.source_button.setObjectName("source_button")
+        self.ui.target_button.setObjectName("target_button")
+        self.ui.temp_button.setObjectName("temp_button")
+        self.ui.bitrate_label.setObjectName("bitrate_label")
+        self.ui.bitrate_box.setObjectName("bitrate_box")
+        self.ui.start_button.setObjectName("start_button")
+        self.ui.subtitles_button.setObjectName("subtitles_button")
+        self.ui.source_label.setObjectName("source_label")
+        self.ui.temp_label.setObjectName("temp_label")
+        self.ui.target_label.setObjectName("target_label")
+        self.ui.audio_list.setObjectName("audio_list")
+        self.ui.subtitle_list.setObjectName("subtitle_list")
+        self.setObjectName("main_layout")
 
     @logger.catch
     def set_bitrate_variants(self) -> None:
@@ -91,8 +139,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.subtitle_list.setModel(self.subtitle_model)
         self.ui.audio_list.setSpacing(5)
         self.ui.subtitle_list.setSpacing(5)
-        self.ui.audio_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.ui.subtitle_list.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.ui.audio_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.ui.subtitle_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
+    @logger.catch
+    def set_black_style(self) -> None:
+        """Установка темной темы"""
+        with open("static/style/black_main.qss", "r") as file:
+            style = file.read()
+        self.setStyleSheet(style)
+
+    @logger.catch
+    def set_standard_style(self) -> None:
+        """Установка стандартной темы"""
+        self.setStyleSheet("")
+
+    @logger.catch
+    def unpolish_and_polish_style(self,  widget: Any) -> None:
+        """Обновление стиля виджета с пользовательским свойсвоой"""
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
 
     @logger.catch
     def set_bitrate(self, bitrate: str) -> None:
@@ -194,9 +260,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.subtitles_button.setDisabled(False)
             self.ui.target_button.setDisabled(False)
             self.off_subtitle_list()
+            self.ui.source_label.setProperty("source_empty", False)
+            self.unpolish_and_polish_style(self.ui.source_label)
             if self.output_path:
                 self.output_file = f"{self.output_path}/{self.source_file_name}"
                 self.ui.target_label.setText(f"{self.output_path}/{self.source_file_name}")
+                self.ui.target_label.setProperty("source_empty", False)
+                self.unpolish_and_polish_style(self.ui.target_label)
         else:
             pass
 
@@ -206,7 +276,9 @@ class MainWindow(QtWidgets.QMainWindow):
         output_path = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select target"))
         if output_path:
             self.output_path = output_path
-            ini_settings.change_output_dir_section(output_path, self.temp_path)
+            ini_settings.change_output_dir_section(output_path)
+            self.ui.target_label.setProperty("target_empty", False)
+            self.unpolish_and_polish_style(self.ui.target_label)
             if self.source_file_name:
                 self.output_file = f"{output_path}/{self.source_file_name}"
                 self.ui.target_label.setText(f"{output_path}/{self.source_file_name}")
@@ -219,28 +291,12 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_dir = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select temp dir"))
         if temp_dir:
             self.ui.temp_label.setText(f"{temp_dir}")
-            ini_settings.change_temp_dir_section(temp_dir, self.output_path)
+            ini_settings.change_temp_dir_section(temp_dir)
             self.temp_path = temp_dir
+            self.ui.temp_label.setProperty("temp_empty", False)
+            self.unpolish_and_polish_style(self.ui.temp_label)
         else:
             pass
-
-    @logger.catch
-    def set_selected_brush(self, model: QtGui.QStandardItem) -> None:
-        """Установка цвета при выборе объекта в списке звука/субтитров"""
-        gradient = QRadialGradient(50, 50, 50, 50, 50)
-        gradient.setColorAt(0, QColor.fromRgbF(0, 1, 0, 1))
-        gradient.setColorAt(1, QColor.fromRgbF(0, 0, 0, 0))
-        brush = QBrush(gradient)
-        self.cansel_selected_brush(model)
-        model.setBackground(brush)
-
-    @logger.catch
-    def cansel_selected_brush(self, model: QtGui.QStandardItem) -> None:
-        """Установка цвета при отмене выборе объекта в списке звука/субтитров"""
-        gradient = QRadialGradient(50, 50, 50, 50, 50)
-        gradient.setColorAt(0, QColor.fromRgbF(255, 255, 255, 0.9))
-        brush = QBrush(gradient)
-        model.setBackground(brush)
 
     @logger.catch
     def set_track_id(self, index) -> None:
@@ -270,8 +326,12 @@ class MainWindow(QtWidgets.QMainWindow):
         source_file = self.ui.source_label.text()
         if temp_dir == "Empty" or target_file == "Empty" or source_file == "Empty" or not self.track_data:
             self.ui.start_button.setText(self.tr(f"Temp dir/output dir/source file/sound track dont selected"))
+            self.ui.start_button.setProperty("rebuild_empty_error", True)
+            self.unpolish_and_polish_style(self.ui.start_button)
         else:
             self.rebuilder_widget = RebuilderWidget(self, self.source_path, self.output_file, self.track_data,
                                                     self.subtitle_data, self.temp_path, self.bitrate,
                                                     self.restricted_codec)
             self.rebuilder_widget.show()
+            self.ui.start_button.setProperty("rebuild_empty_error", False)
+            self.unpolish_and_polish_style(self.ui.start_button)
