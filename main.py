@@ -1,5 +1,7 @@
+import os
 import sys
 
+from PySide6 import QtGui
 from PySide6.QtCore import QTranslator, QLocale
 from PySide6.QtWidgets import QApplication
 from loguru import logger
@@ -19,10 +21,24 @@ def set_up_translator() -> QTranslator:
 
 
 @logger.catch
+def set_up_fonts() -> None:
+    app_location = os.path.dirname(os.path.realpath(__file__))
+    fonts_location = rf"{app_location}\static\fonts"
+    fonts_list = os.listdir(fonts_location)
+    for font in fonts_list:
+        font_path = rf"{fonts_location}\{font}"
+        QtGui.QFontDatabase.addApplicationFont(font_path)
+    font_database = QtGui.QFontDatabase.families(QtGui.QFontDatabase.WritingSystem.Any)
+    logger.info(f"font in db: {font_database}")
+
+
+@logger.catch
 def set_up_app() -> None:
     app = QApplication(sys.argv)
     translator = set_up_translator()
     app.installTranslator(translator)
+    set_up_fonts()
+    QtGui.QFontDatabase.families(QtGui.QFontDatabase.WritingSystem.Any)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
