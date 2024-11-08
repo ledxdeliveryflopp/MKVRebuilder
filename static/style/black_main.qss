@@ -1,0 +1,57 @@
+
+QMainWindow {
+    background-color: #181818;
+}
+
+QPushButton#source_button, QPushButton#target_button,
+ QPushButton#temp_button, QPushButton#start_button {
+    background-color: #ffdb4d;
+    color: #000;
+    font: 13px "YS Text Regular";
+}
+
+QPushButton#source_button:hover, QPushButton#target_button:hover,
+ QPushButton#temp_button:hover, QPushButton#start_button:hover {
+    background-color: #ffd633;
+    opacity: ".3";
+
+}
+
+QLabel#bitrate_label, QLabel#source_label, QLabel#temp_label,
+ QLabel#target_label, QRadioButton#subtitles_button {
+    color: #e6e6e6;
+    font: 14px "YS Text Regular";
+}
+
+QListView#audio_list, QListView#subtitle_list {
+    background-color: #252525;
+    color: #fafcfe;
+}
+
+QListView#audio_list::item:hover, QListView#subtitle_list::item:hover {
+    border: 1px solid #ffdb4d;
+}
+
+QListView#audio_list::item:selected, QListView#subtitle_list::item:selected {
+    border: 1px solid #ffdb4d;
+}
+
+QComboBox#bitrate_box {
+    background-color: #181818;
+    color: hsla(0, 0%, 100%, .5);
+}
+
+QComboBox#bitrate_box:hover {
+    color: #f4f4f4;
+}
+
+QPushButton#start_button[rebuild_empty_error=true] {
+    background-color: red;
+}
+
+QLabel#source_label[source_empty=true],
+ QLabel#temp_label[temp_empty=true], QLabel#target_label[target_empty=true] {
+    color: red;
+}
+
+
