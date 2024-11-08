@@ -32,36 +32,30 @@ class UiMainWindow(object):
         self.main_layout = QVBoxLayout()
         self.main_layout.setObjectName(u"main_layout")
         self.source_button = QPushButton(self.centralwidget)
-        self.source_button.setObjectName(u"source_button")
 
         self.main_layout.addWidget(self.source_button)
 
         self.source_label = QLabel(self.centralwidget)
-        self.source_label.setObjectName(u"source_label")
         self.source_label.setMaximumSize(QSize(16777215, 50))
         self.source_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.source_label)
 
         self.target_button = QPushButton(self.centralwidget)
-        self.target_button.setObjectName(u"target_button")
 
         self.main_layout.addWidget(self.target_button)
 
         self.target_label = QLabel(self.centralwidget)
-        self.target_label.setObjectName(u"target_label")
         self.target_label.setMaximumSize(QSize(16777215, 50))
         self.target_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.target_label)
 
         self.temp_button = QPushButton(self.centralwidget)
-        self.temp_button.setObjectName(u"temp_button")
 
         self.main_layout.addWidget(self.temp_button)
 
         self.temp_label = QLabel(self.centralwidget)
-        self.temp_label.setObjectName(u"temp_label")
         self.temp_label.setMaximumSize(QSize(16777215, 50))
         self.temp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -72,13 +66,11 @@ class UiMainWindow(object):
         self.main_layout.addItem(self.verticalSpacer)
 
         self.bitrate_label = QLabel(self.centralwidget)
-        self.bitrate_label.setObjectName(u"bitrate_label")
         self.bitrate_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.main_layout.addWidget(self.bitrate_label)
 
         self.bitrate_box = QComboBox(self.centralwidget)
-        self.bitrate_box.setObjectName(u"bitrate_box")
 
         self.main_layout.addWidget(self.bitrate_box)
 
@@ -87,7 +79,6 @@ class UiMainWindow(object):
         self.main_layout.addItem(self.verticalSpacer_3)
 
         self.start_button = QPushButton(self.centralwidget)
-        self.start_button.setObjectName(u"settings_button")
 
         self.main_layout.addWidget(self.start_button, 0, Qt.AlignmentFlag.AlignVCenter)
 
@@ -102,7 +93,6 @@ class UiMainWindow(object):
         self.subtitle_layout.addItem(self.horizontalSpacer_2)
 
         self.subtitles_button = QRadioButton(self.centralwidget)
-        self.subtitles_button.setObjectName(u"subtitles_button")
 
         self.subtitle_layout.addWidget(self.subtitles_button)
 
@@ -116,13 +106,11 @@ class UiMainWindow(object):
         self.lists_layout = QHBoxLayout()
         self.lists_layout.setObjectName(u"lists_layout")
         self.audio_list = QListView(self.centralwidget)
-        self.audio_list.setObjectName(u"audio_list")
         self.audio_list.setMaximumSize(QSize(16777215, 340))
 
         self.lists_layout.addWidget(self.audio_list)
 
         self.subtitle_list = QListView(self.centralwidget)
-        self.subtitle_list.setObjectName(u"subtitle_list")
         self.subtitle_list.setMaximumSize(QSize(16777215, 340))
 
         self.lists_layout.addWidget(self.subtitle_list)
@@ -135,11 +123,9 @@ class UiMainWindow(object):
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
-        self.menubar.setObjectName(u"menubar")
         self.menubar.setGeometry(QRect(0, 0, 706, 22))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
-        self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
 
