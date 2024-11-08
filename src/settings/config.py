@@ -43,29 +43,30 @@ class IniConfig:
             return None
 
     @logger.catch
-    def change_temp_dir_section(self, temp_dir: str, output_dir: str) -> None:
+    def change_temp_dir_section(self, temp_dir: str) -> None:
         path = os.path.exists("config/config.ini")
-        self.config["DIRS"] = {"temp": temp_dir, "output": output_dir}
         if path is True:
-            with open("config/config.ini", "w") as file:
-                self.config.write(file)
+            self.config.set('DIRS', 'temp', temp_dir)
+            with open('config/config.ini', 'w') as config_file:
+                self.config.write(config_file)
         else:
             self.set_base_ini_config()
-            with open("config/config.ini", "w") as file:
-                self.config.write(file)
+            self.config.set('DIRS', 'temp', temp_dir)
+            with open('config/config.ini', 'w') as config_file:
+                self.config.write(config_file)
 
     @logger.catch
-    def change_output_dir_section(self, output_dir: str, temp_dir: str) -> None:
+    def change_output_dir_section(self, output_dir: str) -> None:
         path = os.path.exists("config/config.ini")
-        self.config["DIRS"] = {"temp": temp_dir, "output": output_dir}
-        print("test")
         if path is True:
-            with open("config/config.ini", "w") as file:
-                self.config.write(file)
+            self.config.set('DIRS', 'output', output_dir)
+            with open('config/config.ini', 'w') as config_file:
+                self.config.write(config_file)
         else:
             self.set_base_ini_config()
-            with open("config/config.ini", "w") as file:
-                self.config.write(file)
+            self.config.set('DIRS', 'output', output_dir)
+            with open('config/config.ini', 'w') as config_file:
+                self.config.write(config_file)
 
 
 def init_ini_settings() -> IniConfig:
