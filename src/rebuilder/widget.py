@@ -8,11 +8,12 @@ from loguru import logger
 from src.rebuilder.utils import generate_temp_dir, clear_temp_dts, clear_temp_ac3, clear_temp_srt, clear_temp_eac3
 from src.rebuilder.widget_ui import UiRebuilderWidget
 from src.settings.settings import settings
+from src.settings.thread_manager import ThreadManager
 from static.eac3.utils import get_eac3_path
 from static.mkv_tools.utils import get_mkv_tools_path
 
 
-class RebuilderWidget(QtWidgets.QWidget):
+class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
     """Виджет извлечения/конвертации/сборки"""
 
     def __init__(self, main_window: QtWidgets.QMainWindow,
