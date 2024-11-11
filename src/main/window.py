@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QAbstractItemView, QMenuBar, QLabel
 from loguru import logger
 
 from src.info.service import mkv_merge_service
+from src.main.utils import calculate_storage
 from src.main.widget_ui import UiMainWindow
 from src.rebuilder.widget import RebuilderWidget
 
@@ -375,7 +376,15 @@ class MainWindow(QtWidgets.QMainWindow):
         temp_dir = self.ui.temp_label.text()
         target_file = self.ui.target_label.text()
         source_file = self.ui.source_label.text()
-        if source_file == "Empty" or source_file == "Не выбрано":
+        storage_data = calculate_storage(self.source_path, self.output_path)
+        if storage_data:
+            disc_free = storage_data.get("disc_free")
+            output_file_size = storage_data.get("output_file_size")
+            logger.info(f"disc_free: {disc_free}")
+            logger.info(f"output_file_size: {output_file_size}")
+            if output_file_size > disc_free:
+                self.ui.start_button.setText(self.tr(f"Output dir: not enough disk space"))
+        elif source_file == "Empty" or source_file == "Не выбрано":
             self.ui.start_button.setText(self.tr("Source file: dont selected"))
         elif target_file == "Empty" or target_file == "Не выбрано":
             self.ui.start_button.setText(self.tr("Output dir: dont selected"))
