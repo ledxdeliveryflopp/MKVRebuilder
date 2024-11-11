@@ -19,20 +19,21 @@ class ThreadManager:
         return self.thread_manager.maxThreadCount()
 
 
-class GetCpuUsageThread(QThread):
-    cpu_usage_signal = Signal(str)
+class DebugThread(QThread):
+    """Поток для дебага"""
+    cpu_disc_usage_signal = Signal(str)
 
-    def __init__(self):
+    def __init__(self, disc: str) -> None:
         super().__init__()
+        self.disc = disc
 
-    def get_cpu_usage(self):
+    def run(self) -> None:
+        """Подсчет использования CPU и диска"""
         while True:
-            usage = psutil.cpu_percent()
-            time.sleep(2)
-            self.cpu_usage_signal.emit(f"Cpu usage: {usage}%")
-
-    def run(self):
-        while True:
-            usage = psutil.cpu_percent()
-            time.sleep(2)
-            self.cpu_usage_signal.emit(f"Cpu usage: {usage}%")
+            cpu_usage = psutil.cpu_percent()
+            disc_usage = psutil.disk_usage(self.disc)
+            disc_free = round(disc_usage.free / (1024 ** 3), 1)
+            disc_percent = disc_usage[3]
+            time.sleep(5)
+            self.cpu_disc_usage_signal.emit(f"Cpu usage: {cpu_usage}%, Disk free: {disc_free}GB,"
+                                            f" Disk usage: {disc_percent}%")

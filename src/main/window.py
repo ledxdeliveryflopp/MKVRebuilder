@@ -10,7 +10,7 @@ from src.rebuilder.widget import RebuilderWidget
 
 from src.settings.config import ini_settings
 from src.settings.settings import settings
-from src.settings.thread_manager import GetCpuUsageThread
+from src.settings.thread_manager import DebugThread
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -24,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_fill_count_dict: dict = {"source": 0, "temp": 0, "output": 0, "sound": 0}
         self.source_file_name: str | None = None
 
-        self.cpu_usage: GetCpuUsageThread = GetCpuUsageThread()
+        self.debug_thread: DebugThread = DebugThread(disc="F:")
 
         self.source_path: str | None = None
         self.output_file: str | None = None
@@ -163,8 +163,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.unpolish_and_polish_style(self.ui.target_button)
                 self.data_fill_count_dict.update(output=1)
         if settings.get_debug_status() is True:
-            self.cpu_usage.cpu_usage_signal.connect(self.statusBar().showMessage)
-            self.cpu_usage.start()
+            self.debug_thread.cpu_disc_usage_signal.connect(self.statusBar().showMessage)
+            self.debug_thread.start()
         self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
 
     @logger.catch
