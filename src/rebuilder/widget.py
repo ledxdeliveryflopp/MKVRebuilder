@@ -7,12 +7,12 @@ from loguru import logger
 
 from src.rebuilder.utils import generate_temp_dir, clear_temp_dts, clear_temp_ac3, clear_temp_srt, clear_temp_eac3
 from src.rebuilder.widget_ui import UiRebuilderWidget
-from src.settings.thread_manager import ThreadManager
+from src.settings.settings import settings
 from static.eac3.utils import get_eac3_path
 from static.mkv_tools.utils import get_mkv_tools_path
 
 
-class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
+class RebuilderWidget(QtWidgets.QWidget):
     """Виджет извлечения/конвертации/сборки"""
 
     def __init__(self, main_window: QtWidgets.QMainWindow,
@@ -60,6 +60,7 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
         self.ui = UiRebuilderWidget()
         self.ui.setupUi(self)
         self.translate_ui()
+        self.set_theme()
         self.set_mkv_ac3_tools_path()
 
     @logger.catch
@@ -70,12 +71,14 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
         self.setWindowFlags(QtCore.Qt.WindowType.WindowMinimizeButtonHint)
         if self.restricted_codec:
             self.ui.ac3.setText(self.tr("Skip"))
+            self.ui.ac3.setProperty("skip", True)
         else:
             self.ui.ac3.setText(self.tr("convert dts to ac3: Not started"))
         if self.subtitle_data:
             self.ui.subtitle.setText(self.tr("extract subtitle: Not started"))
         else:
             self.ui.subtitle.setText(self.tr("Skip"))
+            self.ui.subtitle.setProperty("skip", True)
 
     @logger.catch
     def set_mkv_ac3_tools_path(self) -> None:
@@ -85,6 +88,26 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
         self.mkv_extract_path = fr"{mkv_tools_path}\mkvextract.exe"
         self.mkv_merge_path = fr"{mkv_tools_path}\mkvmerge.exe"
         self.ac3_converter = fr"{eac3_path}\eac3to.exe"
+
+    @logger.catch
+    def set_black_style(self) -> None:
+        """Установка темной темы"""
+        with open("static/style/black_rebuilder.qss", "r") as file:
+            style = file.read()
+        self.setStyleSheet(style)
+
+    @logger.catch
+    def set_standard_style(self) -> None:
+        """Установка стандартной темы"""
+        self.setStyleSheet("")
+
+    @logger.catch
+    def set_theme(self):
+        status = settings.get_theme_status()
+        if status is True:
+            self.set_black_style()
+        else:
+            self.set_standard_style()
 
     def showEvent(self, event):
         self.main_window.setEnabled(False)
