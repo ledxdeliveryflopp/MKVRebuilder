@@ -4,89 +4,95 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../src/main/window.py" line="62"/>
+        <location filename="../../src/main/window.py" line="63"/>
         <source>Set source file</source>
         <translation>Выбор исходного файла</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="63"/>
+        <location filename="../../src/main/window.py" line="64"/>
         <source>Set output directory</source>
         <translation>Выбор директории сохранения</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="64"/>
+        <location filename="../../src/main/window.py" line="65"/>
         <source>Set temp directory</source>
         <translation>Выбор директории временных файлов</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="65"/>
+        <location filename="../../src/main/window.py" line="66"/>
         <source>Choose bitrate</source>
         <translation>Выбор битрейта</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="66"/>
+        <location filename="../../src/main/window.py" line="67"/>
+        <location filename="../../src/main/window.py" line="179"/>
         <source>Start rebuilding mkv</source>
         <translation>Начать сборку mkv</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="67"/>
+        <location filename="../../src/main/window.py" line="68"/>
         <source>Update subtitles</source>
         <translation>Вырезать субтитры</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="69"/>
-        <location filename="../../src/main/window.py" line="75"/>
-        <location filename="../../src/main/window.py" line="81"/>
+        <location filename="../../src/main/window.py" line="70"/>
+        <location filename="../../src/main/window.py" line="76"/>
+        <location filename="../../src/main/window.py" line="82"/>
         <source>Empty</source>
         <translation>Не выбрано</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="90"/>
+        <location filename="../../src/main/window.py" line="91"/>
         <source>Black theme</source>
         <translation>Темная тема</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="93"/>
+        <location filename="../../src/main/window.py" line="94"/>
         <source>Standard theme</source>
         <translation>Стандартная тема</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="97"/>
+        <location filename="../../src/main/window.py" line="98"/>
         <source>Style</source>
         <translation>Стили</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="285"/>
+        <location filename="../../src/main/window.py" line="290"/>
         <source>Select source</source>
         <translation>Выбор исходного файла</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="319"/>
+        <location filename="../../src/main/window.py" line="321"/>
         <source>Select target</source>
         <translation>Выбор директории сохранения</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="341"/>
+        <location filename="../../src/main/window.py" line="340"/>
         <source>Select temp dir</source>
         <translation>Выбор директории временных файлов</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="387"/>
+        <location filename="../../src/main/window.py" line="386"/>
+        <source>Output dir: not enough disk space</source>
+        <translation>Директория сохранения: не достаточно места</translation>
+    </message>
+    <message>
+        <location filename="../../src/main/window.py" line="388"/>
         <source>Source file: dont selected</source>
         <translation>Исходный файл: не выбран</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="391"/>
+        <location filename="../../src/main/window.py" line="390"/>
         <source>Output dir: dont selected</source>
         <translation>Директория сохранения: не выбрана</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="395"/>
+        <location filename="../../src/main/window.py" line="392"/>
         <source>Temp dir: dont selected</source>
         <translation>Временная папка: не выбрана</translation>
     </message>
     <message>
-        <location filename="../../src/main/window.py" line="399"/>
+        <location filename="../../src/main/window.py" line="394"/>
         <source>Sound track: dont selected</source>
         <translation>Звуковая дорожка: не выбрана</translation>
     </message>
