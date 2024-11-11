@@ -10,10 +10,10 @@ from src.rebuilder.widget import RebuilderWidget
 
 from src.settings.config import ini_settings
 from src.settings.settings import settings
-from src.settings.thread_manager import ThreadManager, GetCpuUsageThread
+from src.settings.thread_manager import GetCpuUsageThread
 
 
-class MainWindow(QtWidgets.QMainWindow, ThreadManager):
+class MainWindow(QtWidgets.QMainWindow):
     """Класс основного окна/виджета"""
 
     def __init__(self) -> None:
@@ -21,7 +21,10 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         self.temp_path: str = ini_settings.get_temp_dir()
         self.output_path: str = ini_settings.get_output_dir()
         self.data_fill_count: int = 0
+        self.data_fill_count_dict: dict = {"source": 0, "temp": 0, "output": 0, "sound": 0}
         self.source_file_name: str | None = None
+
+        self.cpu_usage: GetCpuUsageThread = GetCpuUsageThread()
 
         self.source_path: str | None = None
         self.output_file: str | None = None
@@ -49,14 +52,7 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         self.init_list_model()
         self.set_bitrate_variants()
         self.set_settings_menu()
-        if self.temp_path:
-            self.data_fill_count += 1
-            if self.output_path:
-                self.data_fill_count += 1
-        if settings.get_debug_status() is True:
-            self.cpu_usage = GetCpuUsageThread()
-            self.cpu_usage.cpu_usage_signal.connect(self.statusBar().showMessage)
-            self.cpu_usage.start()
+        self.calculate_saved_data_fill_and_check_debug()
         self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
 
     @logger.catch
@@ -64,7 +60,6 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         """Перевод интерфейса"""
         self.setWindowTitle("MKVRebuilder")
         self.ui.source_button.setText(self.tr("Set source file"))
-        self.ui.target_button.setDisabled(True)
         self.ui.target_button.setText(self.tr("Set output directory"))
         self.ui.temp_button.setText(self.tr("Set temp directory"))
         self.ui.bitrate_label.setText(self.tr("Choose bitrate"))
@@ -85,6 +80,8 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         else:
             self.ui.target_label.setText(self.tr("Empty"))
             self.ui.target_label.setProperty("target_empty", True)
+            self.ui.target_button.setProperty("disabled", True)
+            self.ui.target_button.setDisabled(True)
             self.unpolish_and_polish_style(self.ui.target_label)
 
     @logger.catch
@@ -153,6 +150,35 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         self.ui.subtitle_list.setSpacing(5)
         self.ui.audio_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.ui.subtitle_list.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+
+    @logger.catch
+    def calculate_saved_data_fill_and_check_debug(self) -> None:
+        """Подсчитать выполнение этапов для запуска конвертации и проверь включен ли дебаг"""
+        if self.temp_path:
+            self.data_fill_count += 1
+            self.data_fill_count_dict.update(temp=1)
+            if self.output_path:
+                self.data_fill_count += 1
+                self.ui.target_button.setProperty("disabled", False)
+                self.unpolish_and_polish_style(self.ui.target_button)
+                self.data_fill_count_dict.update(output=1)
+        if settings.get_debug_status() is True:
+            self.cpu_usage.cpu_usage_signal.connect(self.statusBar().showMessage)
+            self.cpu_usage.start()
+        self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
+
+    @logger.catch
+    def calculate_data_fill(self) -> None:
+        """Подсчет выполнения этапов для старта конвертации"""
+        self.data_fill_count = 0
+        for i in self.data_fill_count_dict:
+            data = self.data_fill_count_dict.get(i)
+            self.data_fill_count += data
+            if self.data_fill_count == 4:
+                self.ui.start_button.setText(self.tr("Start rebuilding mkv"))
+        self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
+        self.unpolish_and_polish_style(self.ui.start_button)
+        logger.info(f"data_fill: {self.data_fill_count}")
 
     @logger.catch
     def set_black_style(self) -> None:
@@ -273,12 +299,13 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
             self.fill_audio_list(source_path)
             self.ui.subtitles_button.setDisabled(False)
             self.ui.target_button.setDisabled(False)
+            self.ui.target_button.setProperty("disabled", False)
             self.off_subtitle_list()
             self.ui.source_label.setProperty("source_empty", False)
             self.unpolish_and_polish_style(self.ui.source_label)
-            self.data_fill_count += 1
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
+            self.unpolish_and_polish_style(self.ui.target_button)
+            self.data_fill_count_dict.update(source=1)
+            self.calculate_data_fill()
             if self.output_path:
                 self.output_file = f"{self.output_path}/{self.source_file_name}"
                 self.ui.target_label.setText(f"{self.output_path}/{self.source_file_name}")
@@ -296,12 +323,13 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
             ini_settings.change_output_dir_section(output_path)
             self.ui.target_label.setProperty("target_empty", False)
             self.unpolish_and_polish_style(self.ui.target_label)
-            self.data_fill_count += 1
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
+            self.data_fill_count_dict.update(output=1)
+            self.calculate_data_fill()
             if self.source_file_name:
                 self.output_file = f"{output_path}/{self.source_file_name}"
                 self.ui.target_label.setText(f"{output_path}/{self.source_file_name}")
+            else:
+                self.ui.target_label.setText(f"{output_path}/")
         else:
             pass
 
@@ -310,14 +338,13 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         """Выбор папки временных файлов"""
         temp_dir = QtWidgets.QFileDialog.getExistingDirectory(self, self.tr("Select temp dir"))
         if temp_dir:
-            self.data_fill_count += 1
+            self.data_fill_count_dict.update(temp=1)
+            self.calculate_data_fill()
             self.ui.temp_label.setText(f"{temp_dir}")
             ini_settings.change_temp_dir_section(temp_dir)
             self.temp_path = temp_dir
             self.ui.temp_label.setProperty("temp_empty", False)
             self.unpolish_and_polish_style(self.ui.temp_label)
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
         else:
             pass
 
@@ -327,9 +354,8 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         track = self.ui.audio_list.model().itemFromIndex(index)
         self.track_data = track.data()
         codec = self.track_data.get("codec")
-        self.data_fill_count += 1
-        self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-        self.unpolish_and_polish_style(self.ui.start_button)
+        self.data_fill_count_dict.update(sound=1)
+        self.calculate_data_fill()
         if codec in self.restricted_codec_list:
             self.restricted_codec = codec
             self.ui.bitrate_box.setDisabled(True)
@@ -349,22 +375,14 @@ class MainWindow(QtWidgets.QMainWindow, ThreadManager):
         temp_dir = self.ui.temp_label.text()
         target_file = self.ui.target_label.text()
         source_file = self.ui.source_label.text()
-        if temp_dir == "Empty" or temp_dir == "Не выбрано":
-            self.ui.start_button.setText(self.tr("Temp dir: dont selected"))
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
+        if source_file == "Empty" or source_file == "Не выбрано":
+            self.ui.start_button.setText(self.tr("Source file: dont selected"))
         elif target_file == "Empty" or target_file == "Не выбрано":
             self.ui.start_button.setText(self.tr("Output dir: dont selected"))
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
-        elif source_file == "Empty" or source_file == "Не выбрано":
-            self.ui.start_button.setText(self.tr("Source file: dont selected"))
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
+        elif temp_dir == "Empty" or temp_dir == "Не выбрано":
+            self.ui.start_button.setText(self.tr("Temp dir: dont selected"))
         elif not self.track_data:
             self.ui.start_button.setText(self.tr("Sound track: dont selected"))
-            self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
-            self.unpolish_and_polish_style(self.ui.start_button)
         else:
             self.rebuilder_widget = RebuilderWidget(self, self.source_path, self.output_file, self.track_data,
                                                     self.subtitle_data, self.temp_path, self.bitrate,
