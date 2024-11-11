@@ -3,8 +3,19 @@ QMainWindow {
     background-color: #181818;
 }
 
-QPushButton#source_button, QPushButton#target_button,
- QPushButton#temp_button, QPushButton#start_button {
+QPushButton#source_button, QPushButton#temp_button,
+ QPushButton#start_button {
+    background-color: #ffdb4d;
+    color: #000;
+    font: 13px "YS Text Regular";
+}
+
+QPushButton#target_button[disabled=true] {
+    background-color: #181818;
+    font: 13px "YS Text Regular";
+}
+
+QPushButton#target_button[disabled=false] {
     background-color: #ffdb4d;
     color: #000;
     font: 13px "YS Text Regular";
