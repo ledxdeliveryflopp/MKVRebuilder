@@ -171,3 +171,5 @@ application.log
 # config
 config/
 
+config/config.ini
+/.idea
