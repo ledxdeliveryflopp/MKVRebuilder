@@ -10,6 +10,7 @@ python = ">=3.12,<3.14"
 loguru = "^0.7.2"
 nuitka = "^2.4.11"
 pyside6 = "^6.8.0.2"
+psutil = "^6.1.0"
 
 
 [build-system]
