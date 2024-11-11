@@ -13,9 +13,14 @@ class IniConfig:
     @logger.catch
     def set_base_ini_config(self) -> None:
         """Создание базового конфига"""
-        path = os.path.exists("config/config.ini")
-        if path is False:
+        ini_path = os.path.exists("config/config.ini")
+        dir_path = os.path.exists(rf"{os.getcwd()}\config")
+        if dir_path is False:
             os.makedirs(rf"{os.getcwd()}\config")
+            self.config["DIRS"] = {"temp": "", "output": ""}
+            with open("config/config.ini", "w") as file:
+                self.config.write(file)
+        elif ini_path is False:
             self.config["DIRS"] = {"temp": "", "output": ""}
             with open("config/config.ini", "w") as file:
                 self.config.write(file)
