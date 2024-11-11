@@ -377,14 +377,7 @@ class MainWindow(QtWidgets.QMainWindow):
         target_file = self.ui.target_label.text()
         source_file = self.ui.source_label.text()
         storage_data = calculate_storage(self.source_path, self.output_path)
-        if storage_data:
-            disc_free = storage_data.get("disc_free")
-            output_file_size = storage_data.get("output_file_size")
-            logger.info(f"disc_free: {disc_free}")
-            logger.info(f"output_file_size: {output_file_size}")
-            if output_file_size > disc_free:
-                self.ui.start_button.setText(self.tr(f"Output dir: not enough disk space"))
-        elif source_file == "Empty" or source_file == "Не выбрано":
+        if source_file == "Empty" or source_file == "Не выбрано":
             self.ui.start_button.setText(self.tr("Source file: dont selected"))
         elif target_file == "Empty" or target_file == "Не выбрано":
             self.ui.start_button.setText(self.tr("Output dir: dont selected"))
@@ -392,8 +385,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.start_button.setText(self.tr("Temp dir: dont selected"))
         elif not self.track_data:
             self.ui.start_button.setText(self.tr("Sound track: dont selected"))
-        else:
-            self.rebuilder_widget = RebuilderWidget(self, self.source_path, self.output_file, self.track_data,
-                                                    self.subtitle_data, self.temp_path, self.bitrate,
-                                                    self.restricted_codec)
-            self.rebuilder_widget.show()
+        elif storage_data:
+            disc_free = storage_data.get("disc_free")
+            output_file_size = storage_data.get("output_file_size")
+            logger.info(f"disc_free: {disc_free}")
+            logger.info(f"output_file_size: {output_file_size}")
+            if output_file_size > disc_free:
+                self.ui.start_button.setText(self.tr(f"Output dir: not enough disk space"))
+            else:
+                self.rebuilder_widget = RebuilderWidget(self, self.source_path, self.output_file, self.track_data,
+                                                        self.subtitle_data, self.temp_path, self.bitrate,
+                                                        self.restricted_codec)
+                self.rebuilder_widget.show()
