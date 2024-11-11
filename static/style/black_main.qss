@@ -28,6 +28,11 @@ QListView#audio_list, QListView#subtitle_list {
     color: #fafcfe;
 }
 
+QListView#audio_list::item, QListView#subtitle_list::item {
+    color: #e6e6e6;
+    font: 13px "YS Text Regular";
+}
+
 QListView#audio_list::item:hover, QListView#subtitle_list::item:hover {
     border: 1px solid #ffdb4d;
 }
@@ -45,8 +50,27 @@ QComboBox#bitrate_box:hover {
     color: #f4f4f4;
 }
 
-QPushButton#start_button[rebuild_empty_error=true] {
+QPushButton#start_button[rebuild_status="0"] {
     background-color: red;
+}
+
+QPushButton#start_button[rebuild_status="1"] {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #ffdb4d, stop:1 red);
+}
+
+QPushButton#start_button[rebuild_status="2"] {
+    background-color: qlineargradient(x1:0, y1:0, x2:2, y2:0,
+                stop:0 #ffdb4d, stop:1 red);
+}
+
+QPushButton#start_button[rebuild_status="3"] {
+    background-color: qlineargradient(x1:0, y1:0, x2:3, y2:0,
+                stop:0 #ffdb4d, stop:1 red);
+}
+
+QPushButton#start_button[rebuild_status="4"] {
+    background-color: #ffdb4d;
 }
 
 QLabel#source_label[source_empty=true],
@@ -54,4 +78,7 @@ QLabel#source_label[source_empty=true],
     color: red;
 }
 
+QStatusBar {
+    color: #ffdb4d;
+}
 
