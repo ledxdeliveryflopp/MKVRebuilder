@@ -71,14 +71,14 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
         self.ui.mkv.setText(self.tr("build new mkv: Not started"))
         self.setWindowFlags(QtCore.Qt.WindowType.WindowMinimizeButtonHint)
         if self.restricted_codec:
-            self.ui.ac3.setText(self.tr("Skip"))
+            self.ui.ac3.setText(self.tr("extract subtitle: Skip"))
             self.ui.ac3.setProperty("skip", True)
         else:
             self.ui.ac3.setText(self.tr("convert dts to ac3: Not started"))
         if self.subtitle_data:
             self.ui.subtitle.setText(self.tr("extract subtitle: Not started"))
         else:
-            self.ui.subtitle.setText(self.tr("Skip"))
+            self.ui.subtitle.setText(self.tr("extract subtitle: Skip"))
             self.ui.subtitle.setProperty("skip", True)
 
     @logger.catch
@@ -193,7 +193,7 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_ac3_track.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.sound.setText(self.tr(f"extract sound: {line}")))
+            self.ui.sound.setText(self.tr(f"extract sound: {line}"))
         t2 = time()
         summary_time = t2 - t1
         elapsed = summary_time / 60
@@ -211,7 +211,7 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_dts_track.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.sound.setText(self.tr(f"extract sound: {line}")))
+            self.ui.sound.setText(self.tr(f"extract sound: {line}"))
         t2 = time()
         summary_time = t2 - t1
         elapsed = summary_time / 60
@@ -229,7 +229,7 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_eac3_track.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.sound.setText(self.tr(f"extract sound: {line}")))
+            self.ui.sound.setText(self.tr(f"extract sound: {line}"))
         t2 = time()
         summary_time = t2 - t1
         elapsed = summary_time / 60
@@ -247,7 +247,7 @@ class RebuilderWidget(QtWidgets.QWidget, ThreadManager):
                                    stdout=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
         logger.info(f"{self.extract_sub.__name__}: {command.stdout.readline()}")
         for line in command.stdout:
-            self.thread_manager.start(self.ui.subtitle.setText(self.tr(f"extract subtitle: {line}")))
+            self.ui.subtitle.setText(self.tr(f"extract subtitle: {line}"))
         t2 = time()
         summary_time = t2 - t1
         elapsed = summary_time / 60
