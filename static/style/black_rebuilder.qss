@@ -1,0 +1,15 @@
+
+
+QLabel#sound, QLabel#subtitle, QLabel#ac3, QLabel#mkv {
+   color: #ffdb4d;
+   font: 13px "YS Text Regular";
+}
+
+QWidget {
+    background-color: #181818;
+}
+
+QLabel#ac3[skip=true], QLabel#subtitle[skip=true] {
+   color: red;
+   font: 13px "YS Text Regular";
+}
