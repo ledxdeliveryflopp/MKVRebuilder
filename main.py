@@ -1,6 +1,6 @@
 import os
-import sys
 
+import psutil
 from PySide6 import QtGui
 from PySide6.QtCore import QTranslator, QLocale
 from PySide6.QtWidgets import QApplication
@@ -17,6 +17,7 @@ def set_up_translator() -> QTranslator:
     system_language = QLocale.system().name()
     if system_language:
         translator.load(f"static/localization/{system_language}.qm")
+        logger.info(f"Set lang {system_language}")
     return translator
 
 
@@ -28,20 +29,33 @@ def set_up_fonts() -> None:
     for font in fonts_list:
         font_path = rf"{fonts_location}\{font}"
         QtGui.QFontDatabase.addApplicationFont(font_path)
-    font_database = QtGui.QFontDatabase.families(QtGui.QFontDatabase.WritingSystem.Any)
-    logger.info(f"font in db: {font_database}")
+    logger.info(f"Fonts installed")
+
+
+@logger.catch
+def close_all_subprocess() -> None:
+    """Завершить все подпроцессы при закрытии приложения"""
+    current_process = psutil.Process()
+    children_process = current_process.children(recursive=True)
+    if children_process:
+        for process in children_process:
+            process_pid = process.pid
+            process = psutil.Process(process_pid)
+            process.terminate()
+            logger.info(f"Process {process.pid} closed")
 
 
 @logger.catch
 def set_up_app() -> None:
-    app = QApplication(sys.argv)
+    app = QApplication()
     translator = set_up_translator()
     app.installTranslator(translator)
     set_up_fonts()
-    QtGui.QFontDatabase.families(QtGui.QFontDatabase.WritingSystem.Any)
     window = MainWindow()
     window.show()
-    sys.exit(app.exec())
+    logger.info("App inited")
+    app.exec()
+    close_all_subprocess()
 
 
 if __name__ == '__main__':
