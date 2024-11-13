@@ -1,4 +1,6 @@
+import os.path
 from typing import Any
+
 from PySide6 import QtWidgets, QtGui
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QAbstractItemView, QMenuBar, QLabel
@@ -11,7 +13,6 @@ from src.rebuilder.widget import RebuilderWidget
 
 from src.settings.config import ini_settings
 from src.settings.settings import settings
-from src.settings.thread_manager import DebugThread
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -25,13 +26,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_fill_count_dict: dict = {"source": 0, "temp": 0, "output": 0, "sound": 0}
         self.source_file_name: str | None = None
 
-        self.debug_thread: DebugThread = DebugThread(disc="F:")
-
         self.source_path: str | None = None
         self.output_file: str | None = None
 
         self.track_data: dict | None = None
         self.subtitle_data: dict | None = None
+        self.bitrate_var: list = ["192", "256", "384", "448", "640"]
         self.bitrate: int = 192
         self.restricted_codec: str | None = None
 
@@ -42,6 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.black_style_button: QAction | None = None
         self.standard_style_button: QAction | None = None
+        self.profiler_button: QAction | None = None
         self.ram_usage_label: QLabel | None = None
         self.menu: QMenuBar | None = None
 
@@ -84,23 +85,38 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.target_button.setProperty("disabled", True)
             self.ui.target_button.setDisabled(True)
             self.unpolish_and_polish_style(self.ui.target_label)
+        logger.info("Main window translate applied")
 
     @logger.catch
     def set_settings_menu(self) -> None:
         """Установить меню стилей"""
         self.black_style_button = QAction(self.tr("Black theme"), self)
+        self.black_style_button.setToolTip(self.tr("Set custom black theme"))
         self.black_style_button.triggered.connect(self.set_black_style)
 
         self.standard_style_button = QAction(self.tr("Standard theme"), self)
+        self.standard_style_button.setToolTip(self.tr("Set standard qt theme"))
         self.standard_style_button.triggered.connect(self.set_standard_style)
 
+        self.profiler_button = QAction(self.tr("Enable profiler"), self)
+        self.profiler_button.setToolTip(self.tr("Toggle subprocess profiling"))
+        self.profiler_button.triggered.connect(self.set_profiler)
+        self.profiler_button.setCheckable(True)
+
         self.menu = self.menuBar()
-        style_menu = self.menu.addMenu(self.tr("Style"))
+        settings_menu = self.menu.addMenu(self.tr("Settings"))
+        style_menu = settings_menu.addMenu(self.tr("Style"))
+        style_menu.setToolTipsVisible(True)
+        profiler_menu = settings_menu.addMenu(self.tr("Profiler"))
+        profiler_menu.setToolTipsVisible(True)
 
         style_menu.addAction(self.black_style_button)
         style_menu.addSeparator()
         style_menu.addAction(self.standard_style_button)
         style_menu.addSeparator()
+
+        profiler_menu.addAction(self.profiler_button)
+        logger.info("Menu bar inited")
 
     @logger.catch
     def set_objects_name(self) -> None:
@@ -122,11 +138,8 @@ class MainWindow(QtWidgets.QMainWindow):
     @logger.catch
     def set_bitrate_variants(self) -> None:
         """Установка возможных битрейтов"""
-        self.ui.bitrate_box.addItem("192")
-        self.ui.bitrate_box.addItem("256")
-        self.ui.bitrate_box.addItem("384")
-        self.ui.bitrate_box.addItem("448")
-        self.ui.bitrate_box.addItem("640")
+        for bitrate in self.bitrate_var:
+            self.ui.bitrate_box.addItem(bitrate)
 
     @logger.catch
     def set_signals(self) -> None:
@@ -163,9 +176,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.target_button.setProperty("disabled", False)
                 self.unpolish_and_polish_style(self.ui.target_button)
                 self.data_fill_count_dict.update(output=1)
-        if settings.get_debug_status() is True:
-            self.debug_thread.cpu_disc_usage_signal.connect(self.statusBar().showMessage)
-            self.debug_thread.start()
         self.ui.start_button.setProperty("rebuild_status", self.data_fill_count)
 
     @logger.catch
@@ -194,6 +204,17 @@ class MainWindow(QtWidgets.QMainWindow):
         """Установка стандартной темы"""
         self.setStyleSheet("")
         settings.change_theme(False)
+
+    @logger.catch
+    def set_profiler(self):
+        button_status = self.profiler_button.isChecked()
+        if button_status is True:
+            settings.change_profiler_status(True)
+            self.profiler_button.setText(self.tr("Disable profiler"))
+        else:
+            settings.change_profiler_status(False)
+            self.profiler_button.setText(self.tr("Enable profiler"))
+        logger.info(f"profiler status - {settings.get_profiler_status}")
 
     @logger.catch
     def unpolish_and_polish_style(self,  widget: Any) -> None:
@@ -388,8 +409,6 @@ class MainWindow(QtWidgets.QMainWindow):
         elif storage_data:
             disc_free = storage_data.get("disc_free")
             output_file_size = storage_data.get("output_file_size")
-            logger.info(f"disc_free: {disc_free}")
-            logger.info(f"output_file_size: {output_file_size}")
             if output_file_size > disc_free:
                 self.ui.start_button.setText(self.tr(f"Output dir: not enough disk space"))
             else:
@@ -397,3 +416,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                         self.subtitle_data, self.temp_path, self.bitrate,
                                                         self.restricted_codec)
                 self.rebuilder_widget.show()
+                track_json_path = os.path.exists("track_info.json")
+                if track_json_path is True:
+                    os.remove("track_info.json")
+                    logger.info("Track json removed")
