@@ -5,11 +5,16 @@ from dataclasses import dataclass
 class Settings:
     """Настройки приложения"""
     black_theme: bool = False
-    debug_mode: bool = False
+    profiler_status: bool = False
 
-    def get_debug_status(self) -> bool:
-        """Получить статус дебаг режима"""
-        return self.debug_mode
+    @property
+    def get_profiler_status(self) -> bool:
+        """Получить статус режима профилирования"""
+        return self.profiler_status
+
+    def change_profiler_status(self, status: bool) -> None:
+        """Изменить статус профилирования"""
+        self.profiler_status = status
 
     def get_theme_status(self) -> bool:
         """Получить статус темной темы"""
